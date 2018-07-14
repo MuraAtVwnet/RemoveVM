@@ -13,9 +13,18 @@ function FindParentVHD( $Path ){
 	$VHD =Get-VHD -Path $Path
 	$ParentPath = $VHD.ParentPath
 	if( $ParentPath -ne "" ){
-		FindParentVHD $ParentPath
+		$BaseVHD = Get-Item $ParentPath
+		if( $BaseVHD.Mode -match "-.r..." ){
+			# 親が Read Only(差分ベース) なのでこいつが Root VHD と判断
+			$script:RootVHD = $Path
+		}
+		else{
+			# 親をたどる
+			FindParentVHD $ParentPath
+		}
 	}
 	else{
+		# Root VHD
 		$script:RootVHD = $Path
 	}
 }
