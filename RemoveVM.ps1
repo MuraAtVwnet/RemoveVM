@@ -10,11 +10,11 @@ Param( $VM_Name, [switch]$WhatIf )
 # Find Parent VHD
 ##########################################################################
 function FindParentVHD( $Path ){
-	$VHD =Get-VHD -Path $Path
+	$VHD = Get-VHD -Path $Path
 	$ParentPath = $VHD.ParentPath
-	if( $ParentPath -ne "" ){
+	if( ($ParentPath -ne [string]$null) -and ($ParentPath -ne $null) ){
 		$BaseVHD = Get-Item $ParentPath
-		if( $BaseVHD.Mode -match "-.r..." ){
+		if( $BaseVHD.Mode -match "^-.r" ){
 			# 親が Read Only(差分ベース) なのでこいつが Root VHD と判断
 			$script:RootVHD = $Path
 		}
@@ -49,6 +49,10 @@ if( $VM.State -ne "Off" ){
 	exit
 }
 
+if( $WhatIf ){
+	echo "*** Test mode ***"
+}
+
 # Useing VHD
 [array]$VM_VHDs = Get-VMHardDiskDrive -VMName $VM_Name
 
@@ -61,7 +65,7 @@ foreach( $VM_VHD in $VM_VHDs ){
 }
 
 # Remove VM
-echo "Remove VM : $VM_Name"
+echo "Remove VM  : $VM_Name"
 if( -not $WhatIf ){
 	Remove-VM -Name $VM_Name -Force
 }
